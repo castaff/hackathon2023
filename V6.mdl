@@ -1,0 +1,604 @@
+{UTF-8}
+Attractiveness of wearables=
+	Belief in benefit to health of wearable*(Dollars saved per person per month/Miniumum Savings for Incentive\
+		)*EXP(Sensitivity to price)
+	~	dmnl
+	~	CURRENTLY NOT USED IN MODEL so this feedback loop is inactive. There is a \
+		broken formulation here somewhere.
+	|
+
+Net change in trust=
+	((1-Expected Altruistic Data Use by Ins Company)/Time to build trust)-(1-Effect of population health on trust in data use by company\
+		)*Expected Altruistic Data Use by Ins Company/Time to erode trust
+	~	dmnl/Month
+	~		|
+
+Miniumum Savings for Incentive=
+	1
+	~	Dollars/(Month*Person)
+	~		|
+
+Effect of population health on trust in data use by company=
+	TABLE Population Health Effect on Trust(Average Population Health)
+	~	dmnl
+	~		|
+
+TABLE Population Health Effect on Trust(
+	[(0,0)-(10,10)],(0,0),(0.101983,0.0416667),(0.1983,0.094697),(0.300283,0.166667),(0.405099\
+		,0.280303),(0.5,0.5),(0.603399,0.734848),(0.685552,0.825758),(0.798867,0.916667),(0.895184\
+		,0.962121),(1,1))
+	~	dmnl
+	~		|
+
+Time to Update Belief in Benefit=
+	1
+	~	Month
+	~		|
+
+Baseline Accuracy=
+	0.15
+	~	dmnl [0,1]
+	~		|
+
+Increase in Population Health=
+	Effect of people sharing on population health(Fraction sharing data)/Time to Increase Population Health
+	~	dmnl/Month
+	~		|
+
+Average Population Health= INTEG (
+	Increase in Population Health-Population Health Decay,
+		0.5)
+	~	dmnl
+	~		|
+
+Effect of people sharing on population health(
+	[(0,0)-(0.133144,0.462121)],(0,0),(0.104816,0.439394),(0.223796,0.734848),(0.328612,\
+		0.859848),(0.433428,0.92803),(0.507082,0.958333),(0.614731,0.981061),(1,1))
+	~	dmnl
+	~		|
+
+Time to decay=
+	12
+	~	Month
+	~		|
+
+Time to Increase Population Health=
+	6
+	~	Month
+	~		|
+
+Population Health Decay=
+	Average Population Health/Time to decay
+	~	dmnl/Month
+	~		|
+
+Accuracy of Algo Determined Risk=
+	Baseline Accuracy+alpha*(1-EXP(-lambda*Fraction sharing data))+w
+	~	dmnl
+	~		|
+
+Adopting wearables=
+	(Adoption from Advertising+Adoption from Word of Mouth)*Attractiveness of wearables
+	~	People/Month
+	~		|
+
+Adoption Fraction=
+	0.0025
+	~	dmnl
+	~	Prob you come into contact with an adopter and adopt
+	|
+
+Adoption from Advertising=
+	Advertising Effectiveness*Potential Data Sharers
+	~	People/Month
+	~		|
+
+Adoption from Word of Mouth=
+	Adoption Fraction*Contact Rate*Data Sharers*Potential Data Sharers/Total Insured Population
+	~	People/Month
+	~		|
+
+Advertising Effectiveness=
+	0.0025
+	~	dmnl/Month
+	~		|
+
+alpha=
+	1
+	~	dmnl
+	~	Saturation point/max value of our output y ie accuracy of algo
+	|
+
+Baseline needed to close gap=
+	(Initial Baseline Premium*(Total Insured Population))/(Nonadopters+Data Sharers*(1-Discount for opting into data sharing\
+		))
+	~	Dollars/(Month*Person)
+	~		|
+
+Baseline Premium= INTEG (
+	Net change in baseline,
+		Initial Baseline Premium)
+	~	Dollars/Person/Month
+	~	The theoretical maximum premium
+	|
+
+Belief in benefit to health of wearable=
+	SMOOTH(Accuracy of Algo Determined Risk,Time to Update Belief in Benefit)
+	~	dmnl
+	~	Smooth to show the lag (here 6 months) in perception of the accuracy of \
+		the information the wearable is providing times how effective the it is at \
+		actually altering your behavior
+	|
+
+Contact Rate=
+	10
+	~	dmnl/Month
+	~		|
+
+Data Sharers= INTEG (
+	Adopting wearables-Disillusionment-Sharer Deaths,
+		0)
+	~	People
+	~	Insured individuals who opt into the scheme wherein they receive premium \
+		discounts in exchange for data from the wearable being shared with their \
+		insurance company.
+	|
+
+Discount for opting into data sharing=
+	0.1
+	~	dmnl [0,1,0.05]
+	~		|
+
+Dollars saved per person per month=
+	Baseline Premium-Premiums for adopters
+	~	Dollars/Person/Month
+	~		|
+
+Expected Altruistic Data Use by Ins Company= INTEG (
+	Net change in trust,
+		1)
+	~	dmnl
+	~	Range 0-1, 1 is no expected use of the data in a way that could increase \
+		premiums or hurt the customer, 0 is complete expectation that they will \
+		use the data to maximize profits for the company
+	|
+
+Fraction sharing data=
+	Data Sharers/Total Insured Population
+	~	dmnl
+	~		|
+
+Fractional Death Rate=
+	0.00075
+	~	dmnl/Month [0,0.1,0.0005]
+	~	0.9% per year. This can be altered to better match the risk of the \
+		beneficiary population of a given insurance firm.
+	|
+
+Fractional enrollee increase=
+	0.001
+	~	dmnl/Month
+	~	About 1.1% per year. This is basically the US annual birth rate (as \
+		current enrollees have kids they are added to plans). We are assuming that \
+		with individuals switching jobs, moving states etc that the total \
+		beneficiaries stays approximately flat outside of births. This parameter \
+		can be increased to allow for other avenues of enrollee increase including \
+		word of mouth or other attractiveness qualities of adding discounts for \
+		wearable use to the plan should other insurance companies not opt to do \
+		this.
+	|
+
+Hating from word of mouth=
+	Contact Rate*Value of mistrust*Never Wearable*Potential Data Sharers/Total Insured Population
+	~	People/Month
+	~	The people who become vehemently opposed to wearables as a result of other \
+		people who hate them talking about it.
+	|
+
+Deciding to Opt Out=
+	MIN(Max outflow,Hating from word of mouth)
+	~	People/Month
+	~		|
+
+Initial Baseline Premium=
+	100
+	~	Dollars/Person/Month
+	~		|
+
+Disillusionment=
+	0
+	~	People/Month
+	~		|
+
+lambda=
+	1
+	~	dmnl
+	~	free parameter determining the shape of our analytic function (basically \
+		the growth rate determining decreasing returns to scale
+	|
+
+Max outflow=
+	Potential Data Sharers/Time to Decide
+	~	People/Month
+	~		|
+
+Net change in baseline=
+	(Baseline needed to close gap-Baseline Premium)/Time to close gap
+	~	Dollars/Person/Month/Month
+	~		|
+
+Net new enrollees=
+	Total Insured Population*Fractional enrollee increase
+	~	People/Month
+	~		|
+
+Never Deaths=
+	Never Wearable*Fractional Death Rate
+	~	People/Month
+	~		|
+
+Never Wearable= INTEG (
+	Deciding to Opt Out+Disillusionment-Never Deaths,
+		10)
+	~	People
+	~		|
+
+New enrollees=
+	Net new enrollees
+	~	People/Month
+	~		|
+
+Nonadopters=
+	Potential Data Sharers+Never Wearable
+	~	People
+	~		|
+
+Nonsharer deaths=
+	Fractional Death Rate*Potential Data Sharers
+	~	People/Month
+	~		|
+
+Potential Data Sharers= INTEG (
+	New enrollees-Adopting wearables-Deciding to Opt Out-Nonsharer deaths,
+		10000)
+	~	People
+	~	The people who are insured by a given company and are open to sharing \
+		their wearable data with the ins company in exchange for premium discounts
+	|
+
+Premiums for adopters=
+	Baseline Premium*(1-Discount for opting into data sharing)
+	~	Dollars/Person/Month
+	~		|
+
+Sensitivity to price=
+	1
+	~	dmnl
+	~		|
+
+Sharer Deaths=
+	Data Sharers*Fractional Death Rate
+	~	People/Month
+	~		|
+
+Time to build trust=
+	12
+	~	Month [0,24,1]
+	~		|
+
+Time to close gap=
+	12
+	~	Month
+	~		|
+
+Time to Decide=
+	1
+	~	Month
+	~		|
+
+Time to erode trust=
+	9
+	~	Month [0,24,1]
+	~		|
+
+Total Insured Population=
+	Potential Data Sharers+Data Sharers+Never Wearable
+	~	People
+	~	This is the total population that is insured by the insurance firm in \
+		question.
+	|
+
+Total Revenue per person=
+	(Nonadopters*Baseline Premium+Data Sharers*Premiums for adopters)/Total Insured Population
+	~	Dollars/Month/Person
+	~		|
+
+Value of mistrust=
+	Weight*(1-Expected Altruistic Data Use by Ins Company)
+	~	dmnl
+	~		|
+
+w=
+	0
+	~	dmnl
+	~	minimum value of our output from this analytical function, min accuracy is \
+		0. This is a +0 term, but if we want the min of this to be higher \
+		(whatever our base algorithmic prediction accuracy is) we can make this \
+		higher.
+	|
+
+Weight=
+	0.25
+	~	dmnl
+	~		|
+
+********************************************************
+	.Control
+********************************************************~
+		Simulation Control Parameters
+	|
+
+FINAL TIME  = 72
+	~	Month
+	~	The final time for the simulation.
+	|
+
+INITIAL TIME  = 0
+	~	Month
+	~	The initial time for the simulation.
+	|
+
+SAVEPER  = 
+        TIME STEP
+	~	Month [0,?]
+	~	The frequency with which output is stored.
+	|
+
+TIME STEP  = 0.025
+	~	Month [0,?]
+	~	The time step for the simulation.
+	|
+
+\\\---/// Sketch information - do not modify anything except names
+V300  Do not put anything below this section - it will be ignored
+*View 1
+$-1--1--1,0,|12||-1--1--1|-1--1--1|-1--1--1|-1--1--1|-1--1--1|96,96,100,0
+\\\---/// Sketch information - do not modify anything except names
+V300  Do not put anything below this section - it will be ignored
+*View 2
+$-1--1--1,0,|12||-1--1--1|-1--1--1|-1--1--1|-1--1--1|-1--1--1|96,96,66,0
+10,1,Premiums for adopters,409,980,59,24,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,2,Potential Data Sharers,-491,951,42,24,3,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,3,Never Wearable,-483,676,43,24,3,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,4,Data Sharers,-54,956,43,24,3,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,5,7,2,100,0,43,22,0,192,0,-1--1--1,,1|(-365,952)|
+1,6,7,4,4,0,43,22,0,192,0,-1--1--1,,1|(-183,952)|
+11,7,0,-275,952,6,8,34,3,0,0,1,0,0,0,0,0,0,0,0,0
+10,8,Adopting wearables,-275,984,45,24,40,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,9,11,2,100,0,0,22,0,192,0,-1--1--1,,1|(-494,871)|
+1,10,11,3,4,0,0,22,0,192,0,-1--1--1,,1|(-494,752)|
+11,11,0,-494,810,8,6,33,3,0,0,4,0,0,0,0,0,0,0,0,0
+10,12,Deciding to Opt Out,-441,810,45,24,40,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,13,Accuracy of Algo Determined Risk,226,994,74,24,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,14,Belief in benefit to health of wearable,175,1140,67,24,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,15,Discount for opting into data sharing,939,1096,57,24,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,16,15,1,1,0,45,0,0,192,0,-1--1--1,,1|(722,1135)|
+10,17,Baseline Premium,563,956,42,24,3,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,18,17,1,1,0,43,0,0,192,0,-1--1--1,,1|(497,940)|
+12,19,48,813,960,10,8,0,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,20,22,19,100,0,0,22,0,192,0,-1--1--1,,1|(751,960)|
+1,21,22,17,4,0,0,22,0,192,0,-1--1--1,,1|(646,960)|
+11,22,0,693,960,6,8,34,3,0,0,1,0,0,0,0,0,0,0,0,0
+10,23,Net change in baseline,693,992,59,24,40,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,24,Nonadopters,-216,775,56,22,8,3,1,0,-1,0,0,0,0,0,0,0,0,0
+1,25,3,24,1,1,43,0,0,192,0,-1--1--1,,1|(-349,662)|
+1,26,2,24,1,1,43,0,0,192,0,-1--1--1,,1|(-357,796)|
+10,27,Total Revenue per person,370,803,72,24,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,28,17,27,1,0,43,0,0,192,0,-1--1--1,,1|(544,868)|
+1,29,1,27,1,0,43,0,0,192,0,-1--1--1,,1|(364,863)|
+10,30,Initial Baseline Premium,687,819,62,24,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,31,30,17,0,0,0,0,0,192,1,-1--1--1,,1|(0,0)|
+1,32,17,23,1,0,45,0,0,64,0,-1--1--1,,1|(626,1036)|
+10,33,Baseline needed to close gap,725,711,73,24,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,34,15,33,1,0,43,0,0,192,0,-1--1--1,,1|(845,762)|
+10,35,Total Insured Population,-127,802,46,24,8,3,1,0,-1,0,0,0,0,0,0,0,0,0
+1,36,3,35,1,1,43,0,0,192,0,-1--1--1,,1|(-188,725)|
+1,37,2,35,1,1,43,0,0,192,0,-1--1--1,,1|(-354,857)|
+1,38,4,35,1,1,43,0,0,192,0,-1--1--1,,1|(-119,863)|
+1,39,30,33,0,0,45,0,0,192,0,-1--1--1,,1|(0,0)|
+10,40,Time to close gap,823,1066,59,24,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,41,40,23,1,0,45,0,0,192,0,-1--1--1,,1|(749,1021)|
+1,42,33,23,1,0,43,0,0,192,0,-1--1--1,,1|(774,933)|
+10,43,Contact Rate,-799,1319,57,22,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,44,Adoption from Word of Mouth,-238,1239,64,24,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,45,Adoption Fraction,-94,1309,42,24,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,46,45,44,1,0,43,0,0,192,0,-1--1--1,,1|(-160,1301)|
+1,47,43,44,0,0,43,0,0,192,0,-1--1--1,,1|(0,0)|
+1,48,4,44,1,0,43,0,0,192,0,-1--1--1,,1|(-99,1154)|
+1,49,2,44,1,0,43,0,0,192,0,-1--1--1,,1|(-464,1090)|
+10,50,Adoption from Advertising,-335,1062,62,24,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,51,Advertising Effectiveness,-316,1153,60,24,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,52,51,50,1,0,0,0,0,192,0,-1--1--1,,1|(-352,1110)|
+1,53,2,50,1,0,43,0,0,192,0,-1--1--1,,1|(-455,1027)|
+1,54,44,8,1,0,43,0,0,192,0,-1--1--1,,1|(-241,1132)|
+1,55,50,8,1,0,43,0,0,192,0,-1--1--1,,1|(-281,1028)|
+10,56,Expected Altruistic Data Use by Ins Company,-902,676,93,35,3,3,0,0,-1,0,0,0,0,0,0,0,0,0
+12,57,48,-907,422,10,8,0,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,58,60,57,100,0,0,22,0,192,0,-1--1--1,,1|(-907,478)|
+1,59,60,56,4,0,0,22,0,192,0,-1--1--1,,1|(-907,589)|
+11,60,0,-907,531,8,6,33,3,0,0,4,0,0,0,0,0,0,0,0,0
+10,61,Net change in trust,-851,531,48,19,40,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,62,Time to build trust,-1052,462,56,24,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,63,Time to erode trust,-724,456,61,24,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,64,Hating from word of mouth,-716,836,73,24,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,65,3,64,1,0,43,0,0,192,0,-1--1--1,,1|(-628,709)|
+1,66,2,64,1,0,43,0,0,192,0,-1--1--1,,1|(-694,874)|
+1,67,43,64,0,0,43,0,0,192,0,-1--1--1,,1|(0,0)|
+10,68,Value of mistrust,-891,913,55,22,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,69,68,64,1,0,43,0,0,192,0,-1--1--1,,1|(-837,856)|
+1,70,64,11,1,0,43,0,0,192,0,-1--1--1,,1|(-567,803)|
+10,71,Time to Decide,-612,829,47,10,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,72,62,60,1,0,0,0,0,192,0,-1--1--1,,1|(-1036,501)|
+1,73,63,61,1,0,0,0,0,192,0,-1--1--1,,1|(-765,504)|
+1,74,56,61,1,0,0,0,0,192,0,-1--1--1,,1|(-831,594)|
+1,75,56,68,1,0,45,0,0,192,0,-1--1--1,,1|(-976,780)|
+1,76,78,4,100,0,0,22,0,192,0,-1--1--1,,1|(-54,654)|
+1,77,78,3,4,0,43,22,0,192,0,-1--1--1,,1|(-328,654)|
+11,78,0,-209,654,8,6,33,3,0,0,1,0,0,0,0,0,0,0,0,0
+10,79,Disillusionment,-209,684,54,24,40,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,80,Attractiveness of wearables,-3,1218,61,24,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,81,80,8,1,0,43,0,0,192,0,-1--1--1,,1|(-215,1083)|
+12,82,0,1292,732,233,190,8,15,0,0,2,0,0,0,0,0,0,0,0,0
+Attractiveness of wearables,Graph
+10,83,Sensitivity to price,1,1353,54,24,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,84,83,80,1,0,43,0,0,192,0,-1--1--1,,1|(-14,1281)|
+12,85,0,1245,348,289,194,8,15,0,0,2,0,0,0,0,0,0,0,0,0
+Data Sharers,Graph
+10,86,Total Insured Population,159,719,52,24,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,87,86,27,1,0,45,0,0,192,0,-1--1--1,,1|(265,748)|
+10,88,Total Insured Population,-697,690,52,24,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,89,88,64,1,0,45,0,0,192,0,-1--1--1,,1|(-726,719)|
+10,90,Total Insured Population,521,594,52,24,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,91,90,33,1,0,43,0,0,192,0,-1--1--1,,1|(596,666)|
+10,92,Total Insured Population,-324,1382,52,24,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,93,92,44,0,0,45,0,0,192,0,-1--1--1,,1|(0,0)|
+10,94,Nonadopters,482,685,67,13,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,95,94,27,1,0,43,0,0,192,0,-1--1--1,,1|(426,727)|
+10,96,Nonadopters,818,604,67,13,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,97,96,33,1,0,45,0,0,192,0,-1--1--1,,1|(794,648)|
+10,98,Data Sharers,243,623,52,13,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,99,98,27,1,0,45,0,0,192,0,-1--1--1,,1|(296,659)|
+10,100,Data Sharers,643,559,52,13,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,101,100,33,1,0,43,0,0,192,0,-1--1--1,,1|(650,618)|
+12,102,48,-501,1091,10,8,0,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,103,105,102,100,0,0,22,0,192,0,-1--1--1,,1|(-501,1064)|
+1,104,105,2,4,0,0,22,0,192,0,-1--1--1,,1|(-501,1004)|
+11,105,0,-501,1040,8,6,33,3,0,0,4,0,0,0,0,0,0,0,0,0
+10,106,New enrollees,-431,1040,62,24,40,3,0,0,2,0,0,0,0,0,0,0,0,0
+10,107,Net new enrollees,-568,1141,62,24,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,108,Fractional enrollee increase,-697,1210,58,35,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,109,108,107,1,0,43,0,0,192,0,-1--1--1,,1|(-584,1188)|
+10,110,Total Insured Population,-521,1251,52,24,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,111,110,107,1,0,43,0,0,192,0,-1--1--1,,1|(-517,1185)|
+1,112,107,105,1,0,43,0,0,192,0,-1--1--1,,1|(-556,1099)|
+10,113,Dollars saved per person per month,383,1277,64,35,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,114,1,113,1,0,45,0,0,192,0,-1--1--1,,1|(432,1134)|
+1,115,17,113,1,0,43,0,0,192,0,-1--1--1,,1|(619,1129)|
+1,116,113,80,1,0,43,0,0,192,0,-1--1--1,,1|(255,1327)|
+10,117,Fraction sharing data,108,854,53,24,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,118,4,117,1,0,43,0,0,64,0,-1--1--1,,1|(5,897)|
+1,119,35,117,1,1,45,0,0,64,0,-1--1--1,,1|(-19,811)|
+1,120,117,13,1,0,43,0,0,192,0,-1--1--1,,1|(193,893)|
+1,121,13,14,1,0,43,0,0,192,0,-1--1--1,,1|(223,1067)|
+1,122,14,80,1,0,43,0,0,192,0,-1--1--1,,1|(113,1208)|
+12,123,48,-241,873,10,8,0,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,124,126,4,100,0,0,22,0,192,0,-1--1--1,,1|(-54,873)|
+1,125,126,123,4,0,43,22,0,192,0,-1--1--1,,1|(-187,873)|
+11,126,0,-138,873,6,8,34,3,0,0,1,0,0,0,0,0,0,0,0,0
+10,127,Sharer Deaths,-138,905,42,24,40,3,0,0,-1,0,0,0,0,0,0,0,0,0
+12,128,48,-289,872,10,8,0,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,129,131,2,100,0,0,22,0,192,0,-1--1--1,,1|(-491,872)|
+1,130,131,128,4,0,43,22,0,192,0,-1--1--1,,1|(-332,872)|
+11,131,0,-371,872,6,8,34,3,0,0,1,0,0,0,0,0,0,0,0,0
+10,132,Nonsharer deaths,-371,904,45,24,40,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,133,Fractional Death Rate,-266,820,49,24,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+12,134,48,-267,742,10,8,0,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,135,137,3,100,0,0,22,0,192,0,-1--1--1,,1|(-470,713)|
+1,136,137,134,4,0,43,22,0,192,0,-1--1--1,,1|(-470,742)|
+11,137,0,-470,733,8,6,33,3,0,0,4,0,0,0,0,0,0,0,0,0
+10,138,Never Deaths,-403,733,59,22,40,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,139,3,138,1,0,43,0,0,192,0,-1--1--1,,1|(-423,679)|
+1,140,2,132,1,0,43,0,0,192,0,-1--1--1,,1|(-404,944)|
+1,141,4,127,1,0,43,0,0,192,0,-1--1--1,,1|(-124,947)|
+1,142,133,131,0,0,43,0,0,192,0,-1--1--1,,1|(0,0)|
+1,143,133,126,0,0,43,0,0,192,0,-1--1--1,,1|(0,0)|
+1,144,133,138,0,0,43,0,0,192,0,-1--1--1,,1|(0,0)|
+10,145,alpha,58,933,42,22,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,146,lambda,46,986,42,22,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+10,147,w,37,1039,42,22,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,148,145,13,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,149,146,13,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,150,147,13,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+12,151,0,1295,1129,232,186,8,15,0,0,2,0,0,0,0,0,0,0,0,0
+Never Wearable,Graph
+12,152,0,1691,910,150,150,0,15,0,0,2,0,0,0,0,0,0,0,0,0
+Potential Data Sharers,Graph
+10,153,Weight,-987,968,27,10,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,154,153,68,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
+10,155,Max outflow,-583,891,51,22,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,156,2,155,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,157,71,155,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+1,158,155,12,0,0,0,0,0,192,0,-1--1--1,,1|(0,0)|
+10,159,Average Population Health,-182,390,46,24,3,3,0,0,-1,0,0,0,0,0,0,0,0,0
+12,160,48,-397,391,10,8,0,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,161,163,160,100,0,0,22,0,192,0,-1--1--1,,1|(-350,391)|
+1,162,163,159,4,0,0,22,0,192,0,-1--1--1,,1|(-265,391)|
+11,163,0,-308,391,6,8,34,3,0,0,1,0,0,0,0,0,0,0,0,0
+10,164,Increase in Population Health,-308,434,48,35,40,3,0,0,-1,0,0,0,0,0,0,0,0,0
+12,165,48,69,388,10,8,0,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,166,168,159,100,0,0,22,0,192,0,-1--1--1,,1|(-94,388)|
+1,167,168,165,4,0,0,22,0,192,0,-1--1--1,,1|(9,388)|
+11,168,0,-46,388,6,8,34,3,0,0,1,0,0,0,0,0,0,0,0,0
+10,169,Population Health Decay,-46,420,56,24,40,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,170,159,168,1,0,43,0,0,192,0,-1--1--1,,1|(-108,338)|
+10,171,Time to decay,18,329,62,22,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,172,171,168,0,0,45,0,0,192,0,-1--1--1,,1|(0,0)|
+10,173,Effect of people sharing on population health,-312,548,73,35,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,174,173,164,1,0,0,0,0,192,0,-1--1--1,,1|(-252,488)|
+1,175,117,164,1,0,43,0,0,192,0,-1--1--1,,1|(9,581)|
+10,176,Time to Increase Population Health,-476,507,65,18,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,177,176,164,0,0,45,0,0,64,0,-1--1--1,,1|(0,0)|
+1,178,159,179,1,0,0,0,0,192,0,-1--1--1,,1|(-679,313)|
+10,179,Effect of population health on trust in data use by company,-862,349,90,35,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,180,179,61,1,0,0,0,0,192,0,-1--1--1,,1|(-868,457)|
+10,181,Time to Update Belief in Benefit,336,1081,58,18,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,182,181,14,0,0,45,0,0,64,0,-1--1--1,,1|(0,0)|
+10,183,Miniumum Savings for Incentive,174,1256,51,25,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,184,183,80,1,0,45,0,0,192,0,-1--1--1,,1|(100,1267)|
+10,185,TABLE Population Health Effect on Trust,-1064,257,58,32,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,186,185,179,1,0,0,0,0,192,0,-1--1--1,,1|(-975,274)|
+12,187,0,-1219,742,193,177,8,15,0,0,1,0,0,0,0,0,0,0,0,0
+Population
+10,188,Baseline Accuracy,306,901,34,18,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,189,188,13,0,0,43,0,0,64,0,-1--1--1,,1|(0,0)|
+///---\\\
+:GRAPH Population
+:TITLE Population
+:X-AXIS Time
+:SCALE
+:VAR Never Wearable
+:VAR Potential Data Sharers
+:VAR Data Sharers
+:L<%^E!@
+1:current.vdfx
+4:Time
+5:Attractiveness of wearables
+9:current
+19:66,1
+24:0
+25:72
+26:72
+23:0
+15:0,0,0,0,0,0
+27:0,
+34:0,
+42:0
+72:0
+73:0
+95:0
+96:0
+97:0
+77:0
+78:0
+102:1
+93:0
+94:0
+92:0
+91:0
+90:0
+87:0
+75:
+43:
+103:8,8,8,3,8
+105:0,0,0,0,0,0,0,0,0,0
+104:Arial|12||0-0-0|0-0-0|-1--1--1|0-0-255|192-192-192|-1--1--1
